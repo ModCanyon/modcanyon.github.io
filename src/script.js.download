@@ -1,0 +1,653 @@
+const userInteractionEvents = [
+    "mouseover",
+    "keydown",
+    "touchmove",
+    "touchstart"
+];
+
+function loadScript(url, att, onloadFunction) {
+
+    const newScript = document.createElement("script");
+
+    if (onloadFunction) {
+        newScript.onload = onloadFunction;
+    }
+
+    document.head.appendChild(newScript);
+
+    newScript.src = url;
+
+    if (att) {
+        for (const name in att) {
+            newScript.setAttribute(name, att[name]);
+        }
+    }
+
+}
+
+function triggerListener() {
+
+    /*
+	loadScript('https://cdnjs.cloudflare.com/ajax/libs/quicklink/2.1.0/quicklink.umd.js', {'defer': 'defer'}, function () {
+        quicklink.listen({
+            ignores: [
+                uri => uri.includes('login'),
+                uri => uri.includes('wp-'),
+                uri => uri.includes('wpnonce'),
+                uri => uri.includes('.php')
+            ]
+        });
+    });
+	
+	 
+	 loadScript('https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js', {'defer': 'defer'});
+
+ 
+    loadScript('https://www.googletagmanager.com/gtag/js?id=UA-63678325-13', {'async': 'async'}, function () {
+
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+        gtag('config', 'UA-63678325-13');
+
+    });
+	
+
+    if (apkmody.is_user_logged_in === '1' && apkmody.current_page === 'single') {
+
+        loadScript('https://apkmody.io/wp-includes/js/comment-reply.min.js', {'defer': 'defer'});
+
+    }
+
+    userInteractionEvents.forEach(function (event) {
+        window.removeEventListener(event, triggerListener, {passive: true});
+    });
+	*/
+
+}
+
+window.addEventListener('load', function () {
+
+    // Run
+    userInteractionEvents.forEach(function (event) {
+        window.addEventListener(event, triggerListener, {passive: true});
+    });
+
+});
+
+window.addEventListener('load', function () {
+
+    function ajax(data, callback) {
+
+        let request = new XMLHttpRequest();
+
+        request.open('POST', apkmody.ajax_url);
+        request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+        request.setRequestHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+
+        request.onload = function () {
+
+            if (request.status === 200) {
+                if (callback) {
+                    callback(request.responseText);
+                }
+            }
+
+        };
+
+        request.send(param(data));
+
+    }
+
+    function param(object) {
+
+        var encodedString = '';
+
+        for (var prop in object) {
+
+            if (object.hasOwnProperty(prop)) {
+
+                if (encodedString.length > 0) {
+                    encodedString += '&';
+                }
+
+                encodedString += encodeURI(prop + '=' + object[prop]);
+            }
+        }
+
+        return encodedString;
+
+    }
+
+    /*
+    * Modals
+    */
+
+    let modal_triggers = document.querySelectorAll('.modal-trigger');
+    let modal_overlay = document.querySelector('.modal-overlay');
+
+    modal_triggers.forEach((modal_trigger) => {
+
+        let modal = document.getElementById(modal_trigger.dataset.target);
+
+        modal_trigger.addEventListener('click', function () {
+
+            document.body.style.overflow = 'hidden';
+
+            modal.classList.add('modal-open');
+            modal_overlay.classList.add('modal-overlay-open');
+
+            setTimeout(function () {
+                document.getElementById("search-input").focus();
+            }, 100);
+
+
+        });
+
+        modal_overlay.addEventListener('click', function () {
+
+            document.body.style.overflow = '';
+
+            modal.classList.remove('modal-open');
+            modal_overlay.classList.remove('modal-overlay-open');
+
+        });
+
+    });
+
+    /*
+    * Sidenavs
+    */
+
+    let sidenav_triggers = document.querySelectorAll('.sidenav-trigger');
+    let sidenav_overlay = document.querySelector('.sidenav-overlay');
+
+    sidenav_triggers.forEach((sidenav_trigger) => {
+
+        let sidenav_id = document.getElementById(sidenav_trigger.dataset.target);
+
+        sidenav_trigger.addEventListener('click', function () {
+
+            sidenav_id.classList.add('sidenav-open');
+            sidenav_overlay.classList.add('sidenav-overlay-open');
+
+        });
+
+        sidenav_overlay.addEventListener('click', function () {
+
+            sidenav_id.classList.remove('sidenav-open');
+            sidenav_overlay.classList.remove('sidenav-overlay-open');
+
+        });
+
+    });
+
+    /*
+    * Collapsibles  .schema-faq-section .schema-faq-question,
+    */
+
+    const collapsibles = document.querySelectorAll('.collapsible li .collapsible-header, #entry-content .schema-faq-section,  #entry-content .schema-faq-question, .schema-faq-section .schema-faq-question, .toc-title');
+    collapsibles.forEach((collapsible) => {
+
+        collapsible.addEventListener('click', function () {
+
+            if (collapsible.parentElement.classList.contains('active')) {
+
+                collapsible.parentElement.classList.remove('active');
+
+            } else {
+
+                collapsible.parentElement.classList.add('active');
+
+            }
+
+        });
+    });
+
+    /** Languages Changer */
+
+    const selectables = document.querySelectorAll('.selectable');
+    selectables.forEach((selectable) => {
+        selectable.addEventListener('change', function () {
+            window.location.href = selectable.options[selectable.selectedIndex].value;
+        });
+    });
+
+    if (apkmody.current_page === 'single') {
+
+        /* Rating */
+
+        const rate_disable = document.querySelectorAll('.rate-disable input[type=radio]');
+        rate_disable.forEach(function (element) {
+            element.setAttribute("disabled", "");
+        });
+		
+        const rates = document.querySelectorAll('.rate-active input[type=radio]');
+        rates.forEach(function (element) {
+            element.addEventListener('click', function () {
+
+                if (this.checked) {
+
+                    const point = this.value;
+
+                    ajax({
+                        action: 'rating',
+                        post_id: apkmody.post_id,
+                        value: point
+                    }, function (data) {
+
+                        if (data) {
+
+                            const rate_disable = document.querySelectorAll('#user-rating input[type=radio]');
+                            rate_disable.forEach(function (element) {
+                                element.setAttribute("disabled", "");
+                            });
+
+                            const rate_active = document.querySelector(".rate-active");
+                            rate_active.classList.remove("rate-active");
+
+                            const rate_text = document.getElementById("rating-text");
+                            if (rate_text) {
+                                rate_text.innerHTML = apkmody.vote_thank_you;
+                            }
+
+                        }
+
+                    });
+
+                }
+
+            });
+        });
+
+    }
+
+     if (apkmody.current_page === 'single_downloaded') {
+
+        setTimeout(function () {
+
+            document.getElementById('download-loading').style.display = 'none';
+            document.getElementById('download').style.display = 'block';
+
+        }, 5000);
+
+    }
+
+
+    if (apkmody.is_user_logged_in === '1') {
+
+        /* Notify */
+
+        const noti_icon = document.getElementById('notifications-icon');
+        if (noti_icon) {
+
+            noti_icon.addEventListener('click', function () {
+
+                ajax({
+                    action: 'popup_notifications',
+                    _wpnonce: apkmody.nonce_get_notifications
+                }, function (data) {
+
+                    const notifications = document.getElementById('notifications');
+                    if (notifications && data) {
+                        notifications.innerHTML = data;
+                    }
+
+                });
+
+            });
+
+        }
+
+        /* Comments */
+
+        const comments_icon = document.getElementById('comments-icon');
+        if (comments_icon) {
+
+            comments_icon.addEventListener('click', function () {
+
+                ajax({
+                    action: 'popup_comments',
+                    _wpnonce: apkmody.nonce_get_user_comments
+                }, function (data) {
+
+                    const comments_list = document.getElementById('current-user-comments-list');
+                    if (comments_list && data) {
+                        comments_list.innerHTML = data;
+                    }
+
+                });
+
+            });
+
+        }
+
+        /* Balance */
+
+        const balance_icon = document.getElementById('balance-icon');
+        if (balance_icon) {
+
+            balance_icon.addEventListener('click', function () {
+
+                ajax({
+                    action: 'popup_balance',
+                    _wpnonce: apkmody.nonce_get_balance
+                }, function (data) {
+
+                    const balance = document.getElementById('balance');
+                    if (balance && data) {
+                        balance.innerHTML = data;
+                    }
+
+                });
+
+            });
+
+        }
+
+        const balance_withdraw = document.getElementById('balance-withdraw');
+        const points = document.getElementById('points');
+        if (balance_withdraw) {
+
+            balance_withdraw.addEventListener('click', function () {
+
+                ajax({
+                    action: 'withdraw_balance',
+                    _wpnonce: apkmody.nonce_withdraw_balance
+                }, function (data) {
+
+                    ajax({
+                        action: 'popup_balance',
+                        _wpnonce: apkmody.nonce_get_balance
+                    }, function (data2) {
+
+                        const balance = document.getElementById('balance');
+                        if (balance && data2) {
+                            balance.innerHTML = data2;
+                        }
+
+                    });
+
+                    balance_withdraw.style.display = 'none';
+                    points.innerHTML = '0';
+
+                });
+
+            });
+
+        }
+
+        /*
+        * Dark Mode Toggle
+        */
+
+        const toggle = document.getElementById('toggle-input');
+        const lightIcon = document.getElementById('light-icon');
+        const darkIcon = document.getElementById('dark-icon');
+
+        function setTheme(theme) {
+
+            const on = theme;
+            const off = theme === 'light' ? 'dark' : 'light';
+
+            const htmlEl = document.documentElement;
+            htmlEl.classList.add(on);
+            htmlEl.classList.remove(off);
+
+        }
+
+        function updateUI(theme) {
+
+            toggle.checked = theme === 'dark';
+
+            /* Show the right icon */
+            if (theme === 'light') {
+                lightIcon.classList.add('block');
+                darkIcon.classList.remove('block');
+            } else {
+                darkIcon.classList.add('block');
+                lightIcon.classList.remove('block');
+            }
+        }
+
+        setTheme(apkmody.dark_mode);
+        updateUI(apkmody.dark_mode);
+
+        toggle.addEventListener('click', () => {
+
+            const theme = toggle.checked ? 'dark' : 'light';
+
+            ajax({
+                action: 'update_user_dark_mode',
+                dark_mode: theme,
+                _wpnonce: apkmody.nonce_update_user_dark_mode
+            }, function (data) {
+
+                if (data) {
+                    setTheme(theme);
+                    updateUI(theme);
+                }
+
+            });
+
+        });
+
+    }
+
+    if (apkmody.is_user_logged_in === '1' && apkmody.current_page === 'single') {
+
+        /* Wishlist */
+
+        const add_wishlist = document.getElementById('add-wishlist');
+        const added_wishlist = document.getElementById('added-wishlist');
+
+        if (add_wishlist) {
+
+            add_wishlist.addEventListener('click', function () {
+
+                ajax({
+                        action: 'add_to_wishlist',
+                        post_id: apkmody.post_id,
+                        _wpnonce: apkmody.nonce_add_wishlist
+                    }, function (data) {
+                        if (data) {
+                            add_wishlist.style.display = 'none';
+                            added_wishlist.style.display = 'block';
+                        }
+                    }
+                );
+
+            });
+
+        }
+
+        if (added_wishlist) {
+
+            added_wishlist.addEventListener('click', function () {
+
+                ajax({
+                        action: 'remove_from_wishlist',
+                        post_id: apkmody.post_id,
+                        _wpnonce: apkmody.nonce_remove_wishlist
+                    }, function (data) {
+                        if (data) {
+                            added_wishlist.style.display = 'none';
+                            add_wishlist.style.display = 'block';
+                        }
+                    }
+                );
+
+            });
+
+        }
+
+        const commentform = document.getElementById("commentform");
+        if (commentform) {
+            commentform.removeAttribute("novalidate");
+        }
+
+        /* Auto resize textarea */
+
+        const textarea = document.getElementById('comment');
+        if (textarea) {
+
+            textarea.addEventListener('keydown', function () {
+                setTimeout(function () {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                }, 0);
+
+            });
+
+        }
+		
+	 
+
+
+        /* Load more comments */
+
+        const comments = document.querySelector('.comment-list'),
+            comment_load = document.getElementById('comment_load');
+
+        if (comment_load) {
+
+            comment_load.addEventListener('click', function () {
+
+                const cpage = Number(comment_load.dataset.cpage);
+
+                ajax({
+                    action: 'more_comments',
+                    cpage: cpage,
+                    post_id: apkmody.post_id,
+                    _wpnonce: apkmody.nonce_load_comments
+                }, function (data) {
+
+                    if (data) {
+
+                        comment_load.dataset.cpage = cpage - 1;
+
+                        if (comment_load.dataset.cpage == 1) {
+                            comment_load.style.display = 'none';
+                            comment_load.classList.remove('block');
+                        }
+
+                        comments.innerHTML = comments.innerHTML + data;
+                    }
+
+                });
+
+            });
+        }
+
+    }
+
+    if (apkmody.is_user_logged_in === '1' && apkmody.current_page === 'page' && (apkmody.post_id === '14899' || apkmody.post_id === '14900')) {
+
+        const remove_wishlist = document.querySelectorAll('.delete-from-library');
+        remove_wishlist.forEach(function (element) {
+
+            element.addEventListener('click', function () {
+
+                const remove_post_id = Number(element.dataset.post_id);
+
+                ajax({
+                    action: 'remove_from_wishlist',
+                    post_id: remove_post_id,
+                    _wpnonce: apkmody.nonce_remove_wishlist
+                }, function (data) {
+                    if (data) {
+                        document.getElementById('library-' + remove_post_id).style.display = 'none';
+                    }
+                });
+
+            });
+
+        });
+
+    }
+	
+	
+
+
+});
+
+
+const COLOR_CODES = {
+  info: {
+    color: "green"
+  },
+  warning: {
+    color: "orange",
+    threshold: WARNING_THRESHOLD
+  },
+  alert: {
+    color: "red",
+    threshold: ALERT_THRESHOLD
+  }
+};
+
+let timePassed = 0;
+let timeLeft = TIME_LIMIT;
+let timerInterval = null;
+let remainingPathColor = COLOR_CODES.info.color;
+
+document.getElementById("apps").innerHTML = '<div class="base-timer"><svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><g class="base-timer__circle"><circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle><path id="base-timer-path-remaining" stroke-dasharray="283" class="base-timer__path-remaining ${remainingPathColor}" d="M 50, 50 m -45, 0 a 45,45 0 1,0 90,0 a 45,45 0 1,0 -90,0" ></path></g></svg><span id="base-timer-label" class="base-timer__label">&nbsp;</span></div>';
+
+startTimers();
+
+function onTimesUps() {
+  clearInterval(timerInterval);
+}
+
+function formatTime(time) {
+  const minutes = Math.floor(time / 60);
+  let seconds = time % 60;
+
+  if (seconds < 10) {
+    seconds = `0${seconds}`;
+  }
+
+  return `${seconds}`;
+}
+
+function setRemainingPathColor(timeLeft) {
+  const { alert, warning, info } = COLOR_CODES;
+  if (timeLeft <= alert.threshold) {
+    document
+      .getElementById("base-timer-path-remaining")
+      .classList.remove(warning.color);
+    document
+      .getElementById("base-timer-path-remaining")
+      .classList.add(alert.color);
+	  
+	 
+  } else if (timeLeft <= warning.threshold) {
+    document
+      .getElementById("base-timer-path-remaining")
+      .classList.remove(info.color);
+    document
+      .getElementById("base-timer-path-remaining")
+      .classList.add(warning.color);
+		
+  }
+  
+}
+
+function calculateTimeFraction() {
+  const rawTimeFraction = timeLeft / TIME_LIMIT;
+  return rawTimeFraction - (1 / TIME_LIMIT) * (1 - rawTimeFraction);
+}
+
+function setCircleDasharray() {
+  const circleDasharray = `${(
+    calculateTimeFraction() * FULL_DASH_ARRAY
+  ).toFixed(0)} 283`;
+  document
+    .getElementById("base-timer-path-remaining")
+    .setAttribute("stroke-dasharray", circleDasharray);
+	
+}
